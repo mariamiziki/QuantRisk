@@ -954,17 +954,69 @@ if analyze_button:
 
 
         # =================================================
-        # RISK ANALYSIS
+        # PORTFOLIO DAILY RETURNS
         # =================================================
-
-        st.subheader(
-            "⚠️ Risk Analysis"
-        )
 
         portfolio_daily_returns = (
             returns.dot(
                 recommended_weights
             )
+        )
+
+
+        # =================================================
+        # DRAWDOWN ANALYSIS
+        # =================================================
+
+        st.subheader(
+            "📉 Drawdown Analysis"
+        )
+
+        portfolio_growth = (
+            1 + portfolio_daily_returns
+        ).cumprod()
+
+        running_peak = (
+            portfolio_growth.cummax()
+        )
+
+        drawdown = (
+            portfolio_growth
+            / running_peak
+        ) - 1
+
+        max_drawdown = (
+            drawdown.min()
+        )
+
+        st.metric(
+            "Maximum Drawdown",
+            f"{max_drawdown:.2%}"
+        )
+
+        drawdown_chart = (
+            drawdown * 100
+        ).rename("Drawdown (%)")
+
+        st.line_chart(
+            drawdown_chart,
+            use_container_width=True
+        )
+
+        st.caption(
+            "Drawdown measures the decline of the portfolio "
+            "from a previous historical peak. Maximum Drawdown "
+            "represents the largest peak-to-trough loss observed "
+            "during the selected historical period."
+        )
+
+
+        # =================================================
+        # RISK ANALYSIS
+        # =================================================
+
+        st.subheader(
+            "⚠️ Risk Analysis"
         )
 
         var_95 = (
@@ -1097,6 +1149,12 @@ if analyze_button:
 
         st.subheader(
             "🔎 Risk Interpretation"
+        )
+
+        st.write(
+            f"The maximum historical drawdown of the selected "
+            f"portfolio is approximately "
+            f"**{max_drawdown:.2%}**."
         )
 
         st.write(
