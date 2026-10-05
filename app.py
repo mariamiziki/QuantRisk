@@ -1,9 +1,8 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import yfinance as yf
-
-
 
 from src.portfolio import (
     minimum_variance_portfolio,
@@ -22,15 +21,265 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📊 QuantRisk")
 
-st.subheader(
-    "Quantitative Portfolio Risk & Decision Support System"
+# =========================================================
+# PROFESSIONAL DASHBOARD DESIGN
+# =========================================================
+
+st.markdown(
+    """
+<style>
+
+/* MAIN APP */
+
+.stApp {
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(37, 99, 235, 0.20),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #07111f 0%,
+            #0f172a 50%,
+            #111c35 100%
+        );
+
+    color: #f8fafc;
+}
+
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+    max-width: 1400px;
+}
+
+
+/* SIDEBAR */
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(
+        180deg,
+        #0b1220 0%,
+        #111827 100%
+    );
+
+    border-right: 1px solid rgba(56, 189, 248, 0.20);
+}
+
+
+/* HEADINGS */
+
+h1 {
+    color: #f8fafc !important;
+}
+
+h2, h3 {
+    color: #38bdf8 !important;
+}
+
+
+/* HERO */
+
+.hero-card {
+    position: relative;
+    overflow: hidden;
+
+    padding: 38px 42px;
+    margin-bottom: 30px;
+
+    background: linear-gradient(
+        120deg,
+        rgba(14, 165, 233, 0.18),
+        rgba(37, 99, 235, 0.12)
+    );
+
+    border: 1px solid rgba(56, 189, 248, 0.30);
+    border-radius: 22px;
+
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.28);
+}
+
+.hero-card::after {
+    content: "";
+    position: absolute;
+
+    width: 260px;
+    height: 260px;
+
+    right: -80px;
+    top: -100px;
+
+    background: rgba(56, 189, 248, 0.10);
+    border-radius: 50%;
+}
+
+.hero-badge {
+    display: inline-block;
+
+    padding: 7px 14px;
+    margin-bottom: 10px;
+
+    background: rgba(56, 189, 248, 0.10);
+
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 30px;
+
+    color: #7dd3fc;
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+}
+
+.hero-card h1 {
+    margin: 5px 0 2px 0;
+
+    font-size: 48px;
+    font-weight: 800;
+
+    color: #f8fafc !important;
+}
+
+.hero-card h3 {
+    margin-top: 0;
+    color: #38bdf8 !important;
+    font-size: 22px;
+}
+
+.hero-card p {
+    max-width: 780px;
+
+    margin-top: 15px;
+
+    color: #cbd5e1;
+
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+
+/* METRIC CARDS */
+
+[data-testid="stMetric"] {
+    background: linear-gradient(
+        145deg,
+        rgba(30, 41, 59, 0.95),
+        rgba(15, 23, 42, 0.95)
+    );
+
+    border: 1px solid rgba(56, 189, 248, 0.20);
+    border-radius: 16px;
+
+    padding: 18px 20px;
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.20);
+}
+
+[data-testid="stMetricLabel"] {
+    color: #94a3b8;
+}
+
+[data-testid="stMetricValue"] {
+    color: #f8fafc;
+    font-weight: 700;
+}
+
+
+/* BUTTON */
+
+.stButton > button {
+    width: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #0ea5e9,
+        #2563eb
+    );
+
+    color: white;
+
+    border: none;
+    border-radius: 10px;
+
+    padding: 0.70rem 1rem;
+
+    font-weight: 700;
+    font-size: 16px;
+
+    transition: all 0.25s ease;
+
+    box-shadow:
+        0 5px 18px rgba(37, 99, 235, 0.25);
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+
+    background: linear-gradient(
+        90deg,
+        #38bdf8,
+        #3b82f6
+    );
+
+    color: white;
+    border: none;
+
+    box-shadow:
+        0 8px 25px rgba(14, 165, 233, 0.40);
+}
+
+
+/* DATAFRAMES */
+
+[data-testid="stDataFrame"] {
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+
+/* ALERTS */
+
+[data-testid="stAlert"] {
+    border-radius: 12px;
+}
+
+
+/* TEXT */
+
+p {
+    color: #cbd5e1;
+}
+
+hr {
+    border-color: rgba(148, 163, 184, 0.15);
+}
+
+</style>
+""",
+    unsafe_allow_html=True
 )
 
-st.write(
-    "Analyze portfolio performance, optimize asset allocation, "
-    "measure risk, and simulate future portfolio scenarios."
+
+# =========================================================
+# HERO
+# =========================================================
+
+st.markdown(
+    """<div class="hero-card">
+<div class="hero-badge">QUANTITATIVE FINANCE • RISK ANALYTICS</div>
+<h1>📊 QuantRisk</h1>
+<h3>Portfolio Risk & Decision Support System</h3>
+<p>Analyze financial markets, optimize portfolio allocation, measure downside risk and simulate future portfolio scenarios through a quantitative decision-support dashboard.</p>
+</div>""",
+    unsafe_allow_html=True
 )
 
 
@@ -38,7 +287,7 @@ st.write(
 # SIDEBAR
 # =========================================================
 
-st.sidebar.header("Portfolio Settings")
+st.sidebar.header("⚙️ Portfolio Settings")
 
 tickers_input = st.sidebar.text_input(
     "Asset Tickers",
@@ -79,7 +328,7 @@ tickers = [
 ]
 
 analyze_button = st.sidebar.button(
-    "Analyze Portfolio",
+    "🚀 Analyze Portfolio",
     type="primary"
 )
 
@@ -97,28 +346,37 @@ if analyze_button:
         )
         st.stop()
 
-    st.write("### Selected Portfolio")
+    st.subheader("📌 Selected Portfolio")
 
-    st.write("Assets:", tickers)
+    col1, col2, col3 = st.columns(3)
 
-    st.write(
-        "Start Date:",
-        start_date
+    col1.metric(
+        "Selected Assets",
+        len(tickers)
     )
 
-    st.write(
-        f"Portfolio Value: ${portfolio_value:,.2f}"
+    col2.metric(
+        "Portfolio Value",
+        f"${portfolio_value:,.0f}"
     )
 
-    st.write(
-        f"Risk-Free Rate: {risk_free_rate:.2f}%"
+    col3.metric(
+        "Risk-Free Rate",
+        f"{risk_free_rate:.2f}%"
     )
+
+    st.caption(
+        f"Assets: {', '.join(tickers)} • "
+        f"Historical data starting from {start_date}"
+    )
+
 
     # =====================================================
     # DOWNLOAD MARKET DATA
     # =====================================================
 
     with st.spinner("Downloading market data..."):
+
         data = yf.download(
             tickers,
             start=start_date,
@@ -135,30 +393,38 @@ if analyze_button:
     else:
 
         prices = data["Close"]
-        prices = prices.dropna(axis=1, how="all")
+
+        prices = prices.dropna(
+            axis=1,
+            how="all"
+        )
 
         if prices.shape[1] < 2:
+
             st.error(
                 "Not enough valid assets were downloaded. "
                 "Please check the ticker symbols and enter "
                 "at least two valid assets."
             )
+
             st.stop()
 
         st.success(
-            "Market data downloaded successfully!"
+            "✓ Market data downloaded successfully!"
         )
-               # =================================================
+
+
+        # =================================================
         # PORTFOLIO OVERVIEW
         # =================================================
 
-        st.subheader("Portfolio Overview")
+        st.subheader("📊 Portfolio Overview")
 
         col1, col2, col3 = st.columns(3)
 
         col1.metric(
             "Assets",
-            len(tickers)
+            len(prices.columns)
         )
 
         col2.metric(
@@ -173,21 +439,23 @@ if analyze_button:
 
         st.divider()
 
-        # =================================================
-        # HISTORICAL PRICES
-        # =================================================
-
-        st.subheader("Historical Prices")
 
         # =================================================
         # HISTORICAL PRICES
         # =================================================
 
-        st.subheader("Historical Prices")
+        st.subheader("📈 Historical Prices")
 
-        st.dataframe(prices.tail())
+        st.dataframe(
+            prices.tail(),
+            use_container_width=True
+        )
 
-        st.line_chart(prices)
+        st.line_chart(
+            prices,
+            use_container_width=True
+        )
+
 
         # =================================================
         # RETURNS AND STATISTICS
@@ -198,7 +466,8 @@ if analyze_button:
         trading_days = 252
 
         annual_returns = (
-            returns.mean() * trading_days
+            returns.mean()
+            * trading_days
         )
 
         annual_volatility = (
@@ -207,18 +476,21 @@ if analyze_button:
         )
 
         covariance_matrix = (
-            returns.cov() * trading_days
+            returns.cov()
+            * trading_days
         )
+
 
         # =================================================
         # ASSET PERFORMANCE
         # =================================================
 
-        st.subheader("Asset Performance")
+        st.subheader("📋 Asset Performance")
 
         performance = pd.DataFrame({
             "Annual Return (%)":
                 annual_returns * 100,
+
             "Annual Volatility (%)":
                 annual_volatility * 100
         })
@@ -227,19 +499,28 @@ if analyze_button:
             performance.style.format({
                 "Annual Return (%)": "{:.2f}%",
                 "Annual Volatility (%)": "{:.2f}%"
-            })
+            }),
+            use_container_width=True
         )
 
+
         # =================================================
-        # MINIMUM VARIANCE PORTFOLIO
+        # MINIMUM VARIANCE
         # =================================================
 
-        min_var_weights = minimum_variance_portfolio(
-            covariance_matrix
+        st.subheader(
+            "🛡️ Minimum Variance Portfolio"
+        )
+
+        min_var_weights = (
+            minimum_variance_portfolio(
+                covariance_matrix
+            )
         )
 
         min_var_return = (
-            min_var_weights @ annual_returns
+            min_var_weights
+            @ annual_returns
         )
 
         min_var_volatility = (
@@ -248,20 +529,20 @@ if analyze_button:
             @ min_var_weights
         ) ** 0.5
 
-        st.subheader(
-            "Minimum Variance Portfolio"
-        )
-
         min_var_df = pd.DataFrame({
-            "Asset": prices.columns,
-            "Weight (%)": min_var_weights * 100
+            "Asset":
+                prices.columns,
+
+            "Weight (%)":
+                min_var_weights * 100
         })
 
         st.dataframe(
             min_var_df.style.format({
                 "Weight (%)": "{:.2f}%"
             }),
-            hide_index=True
+            hide_index=True,
+            use_container_width=True
         )
 
         col1, col2 = st.columns(2)
@@ -276,20 +557,30 @@ if analyze_button:
             f"{min_var_volatility:.2%}"
         )
 
+
         # =================================================
-        # MAXIMUM SHARPE PORTFOLIO
+        # MAXIMUM SHARPE
         # =================================================
 
-        risk_free_decimal = risk_free_rate / 100
+        st.subheader(
+            "⚡ Maximum Sharpe Portfolio"
+        )
 
-        max_sharpe_weights = maximum_sharpe_portfolio(
-            annual_returns,
-            covariance_matrix,
-            risk_free_decimal
+        risk_free_decimal = (
+            risk_free_rate / 100
+        )
+
+        max_sharpe_weights = (
+            maximum_sharpe_portfolio(
+                annual_returns,
+                covariance_matrix,
+                risk_free_decimal
+            )
         )
 
         max_sharpe_return = (
-            max_sharpe_weights @ annual_returns
+            max_sharpe_weights
+            @ annual_returns
         )
 
         max_sharpe_volatility = (
@@ -303,20 +594,20 @@ if analyze_button:
             - risk_free_decimal
         ) / max_sharpe_volatility
 
-        st.subheader(
-            "Maximum Sharpe Portfolio"
-        )
-
         max_sharpe_df = pd.DataFrame({
-            "Asset": prices.columns,
-            "Weight (%)": max_sharpe_weights * 100
+            "Asset":
+                prices.columns,
+
+            "Weight (%)":
+                max_sharpe_weights * 100
         })
 
         st.dataframe(
             max_sharpe_df.style.format({
                 "Weight (%)": "{:.2f}%"
             }),
-            hide_index=True
+            hide_index=True,
+            use_container_width=True
         )
 
         col1, col2, col3 = st.columns(3)
@@ -335,14 +626,19 @@ if analyze_button:
             "Sharpe Ratio",
             f"{max_sharpe_ratio:.3f}"
         )
-                # =================================================
+
+
+        # =================================================
         # STRATEGY COMPARISON
         # =================================================
 
-        st.subheader("Strategy Comparison")
+        st.subheader(
+            "⚖️ Strategy Comparison"
+        )
 
         min_var_sharpe = (
-            min_var_return - risk_free_decimal
+            min_var_return
+            - risk_free_decimal
         ) / min_var_volatility
 
         comparison_df = pd.DataFrame({
@@ -350,14 +646,17 @@ if analyze_button:
                 "Minimum Variance",
                 "Maximum Sharpe"
             ],
+
             "Expected Return (%)": [
                 min_var_return * 100,
                 max_sharpe_return * 100
             ],
+
             "Volatility (%)": [
                 min_var_volatility * 100,
                 max_sharpe_volatility * 100
             ],
+
             "Sharpe Ratio": [
                 min_var_sharpe,
                 max_sharpe_ratio
@@ -366,21 +665,27 @@ if analyze_button:
 
         st.dataframe(
             comparison_df.style.format({
-                "Expected Return (%)": "{:.2f}%",
-                "Volatility (%)": "{:.2f}%",
-                "Sharpe Ratio": "{:.3f}"
+                "Expected Return (%)":
+                    "{:.2f}%",
+
+                "Volatility (%)":
+                    "{:.2f}%",
+
+                "Sharpe Ratio":
+                    "{:.3f}"
             }),
-            hide_index=True
+            hide_index=True,
+            use_container_width=True
         )
 
         st.divider()
-                # =================================================
+
+
+        # =================================================
         # EFFICIENT FRONTIER
         # =================================================
 
-        st.subheader("Efficient Frontier")
-
-        import numpy as np
+        st.subheader("🌐 Efficient Frontier")
 
         np.random.seed(42)
 
@@ -426,22 +731,25 @@ if analyze_button:
             )
 
         fig, ax = plt.subplots(
-            figsize=(9, 6)
+            figsize=(10, 6)
         )
+
+        fig.patch.set_facecolor("#0f172a")
+        ax.set_facecolor("#0f172a")
 
         scatter = ax.scatter(
             random_volatilities,
             random_returns,
             c=random_sharpe_ratios,
             cmap="viridis",
-            alpha=0.6
+            alpha=0.7
         )
 
         ax.scatter(
             min_var_volatility,
             min_var_return,
             marker="*",
-            s=250,
+            s=300,
             label="Minimum Variance"
         )
 
@@ -449,7 +757,7 @@ if analyze_button:
             max_sharpe_volatility,
             max_sharpe_return,
             marker="*",
-            s=250,
+            s=300,
             label="Maximum Sharpe"
         )
 
@@ -462,118 +770,223 @@ if analyze_button:
         )
 
         ax.set_title(
-            "Efficient Frontier - Risk vs Return"
+            "Efficient Frontier — Risk vs Return"
         )
 
-        ax.legend()
+        ax.tick_params(
+            colors="#cbd5e1"
+        )
 
-        fig.colorbar(
+        ax.xaxis.label.set_color(
+            "#cbd5e1"
+        )
+
+        ax.yaxis.label.set_color(
+            "#cbd5e1"
+        )
+
+        ax.title.set_color(
+            "#f8fafc"
+        )
+
+        for spine in ax.spines.values():
+            spine.set_color("#334155")
+
+        legend = ax.legend()
+
+        plt.setp(
+            legend.get_texts(),
+            color="#e2e8f0"
+        )
+
+        legend.get_frame().set_facecolor(
+            "#1e293b"
+        )
+
+        legend.get_frame().set_edgecolor(
+            "#334155"
+        )
+
+        colorbar = fig.colorbar(
             scatter,
-            ax=ax,
-            label="Sharpe Ratio"
+            ax=ax
         )
 
-        st.pyplot(fig)
+        colorbar.set_label(
+            "Sharpe Ratio",
+            color="#cbd5e1"
+        )
+
+        colorbar.ax.tick_params(
+            colors="#cbd5e1"
+        )
+
+        st.pyplot(
+            fig,
+            use_container_width=True
+        )
+
+        plt.close(fig)
 
         st.caption(
-            "Each point represents a randomly generated portfolio. "
-            "The chart illustrates the trade-off between expected "
-            "return and portfolio risk."
+            "Each point represents a randomly generated "
+            "portfolio. The visualization illustrates "
+            "the trade-off between expected return and risk."
         )
+
 
         # =================================================
         # RECOMMENDED PORTFOLIO
         # =================================================
 
-        st.subheader("Recommended Portfolio")
+        st.subheader(
+            "🎯 Recommended Portfolio"
+        )
+
         st.success(
             f"Recommended Strategy: {strategy}"
         )
 
         if strategy == "Minimum Variance":
 
-            recommended_weights = min_var_weights
-            recommended_return = min_var_return
-            recommended_volatility = min_var_volatility
+            recommended_weights = (
+                min_var_weights
+            )
+
+            recommended_return = (
+                min_var_return
+            )
+
+            recommended_volatility = (
+                min_var_volatility
+            )
 
         else:
 
-            recommended_weights = max_sharpe_weights
-            recommended_return = max_sharpe_return
-            recommended_volatility = max_sharpe_volatility
+            recommended_weights = (
+                max_sharpe_weights
+            )
+
+            recommended_return = (
+                max_sharpe_return
+            )
+
+            recommended_volatility = (
+                max_sharpe_volatility
+            )
 
         recommended_df = pd.DataFrame({
-            "Asset": prices.columns,
+            "Asset":
+                prices.columns,
+
             "Recommended Weight (%)":
                 recommended_weights * 100
         })
 
-        st.dataframe(
-            recommended_df.style.format({
-                "Recommended Weight (%)": "{:.2f}%"
-            }),
-            hide_index=True
-        )
-                # Portfolio Allocation Chart
-
-        fig, ax = plt.subplots(figsize=(6, 6))
-
-        ax.pie(
-            recommended_weights,
-            labels=prices.columns,
-            autopct="%1.1f%%",
-            startangle=90
+        col_chart, col_table = st.columns(
+            [1.1, 1]
         )
 
-        ax.set_title(
-            f"{strategy} - Portfolio Allocation"
-        )
+        with col_chart:
 
-        st.pyplot(fig)
+            fig, ax = plt.subplots(
+                figsize=(6, 6)
+            )
 
+            fig.patch.set_facecolor("#0f172a")
+            ax.set_facecolor("#0f172a")
 
-        col1, col2 = st.columns(2)
+            wedges, texts, autotexts = ax.pie(
+                recommended_weights,
+                labels=prices.columns,
+                autopct="%1.1f%%",
+                startangle=90,
+                wedgeprops={
+                    "edgecolor": "#0f172a",
+                    "linewidth": 2
+                }
+            )
 
-        col1.metric(
-            "Recommended Expected Return",
-            f"{recommended_return:.2%}"
-        )
+            for text in texts:
+                text.set_color("#e2e8f0")
 
-        col2.metric(
-            "Recommended Volatility",
-            f"{recommended_volatility:.2%}"
-        )
+            for autotext in autotexts:
+                autotext.set_color("#ffffff")
+                autotext.set_fontweight("bold")
+
+            ax.set_title(
+                f"{strategy} Allocation"
+            )
+
+            ax.title.set_color("#f8fafc")
+
+            st.pyplot(
+                fig,
+                use_container_width=True
+            )
+
+            plt.close(fig)
+
+        with col_table:
+
+            st.dataframe(
+                recommended_df.style.format({
+                    "Recommended Weight (%)":
+                        "{:.2f}%"
+                }),
+                hide_index=True,
+                use_container_width=True
+            )
+
+            st.write("")
+
+            col1, col2 = st.columns(2)
+
+            col1.metric(
+                "Expected Return",
+                f"{recommended_return:.2%}"
+            )
+
+            col2.metric(
+                "Volatility",
+                f"{recommended_volatility:.2%}"
+            )
+
 
         # =================================================
         # RISK ANALYSIS
         # =================================================
 
-        st.subheader("Risk Analysis")
-
-        portfolio_daily_returns = returns.dot(
-            recommended_weights
+        st.subheader(
+            "⚠️ Risk Analysis"
         )
 
-        # Historical VaR 95%
-
-        var_95 = portfolio_daily_returns.quantile(
-            0.05
+        portfolio_daily_returns = (
+            returns.dot(
+                recommended_weights
+            )
         )
 
-        # Historical CVaR 95%
+        var_95 = (
+            portfolio_daily_returns
+            .quantile(0.05)
+        )
 
-        cvar_95 = portfolio_daily_returns[
-            portfolio_daily_returns <= var_95
-        ].mean()
-
-        # Convert to monetary losses
+        cvar_95 = (
+            portfolio_daily_returns[
+                portfolio_daily_returns
+                <= var_95
+            ].mean()
+        )
 
         var_loss = (
-            abs(var_95) * portfolio_value
+            abs(var_95)
+            * portfolio_value
         )
 
         cvar_loss = (
-            abs(cvar_95) * portfolio_value
+            abs(cvar_95)
+            * portfolio_value
         )
 
         col1, col2 = st.columns(2)
@@ -588,11 +1001,14 @@ if analyze_button:
             f"${cvar_loss:,.2f}"
         )
 
+
         # =================================================
-        # MONTE CARLO SIMULATION
+        # MONTE CARLO
         # =================================================
 
-        st.subheader("Monte Carlo Simulation")
+        st.subheader(
+            "🎲 Monte Carlo Simulation"
+        )
 
         simulated_values, final_values = (
             monte_carlo_simulation(
@@ -606,7 +1022,8 @@ if analyze_button:
         )
 
         probability_of_loss = (
-            final_values < portfolio_value
+            final_values
+            < portfolio_value
         ).mean()
 
         percentile_5 = (
@@ -631,13 +1048,14 @@ if analyze_button:
             f"${percentile_5:,.2f}"
         )
 
-        # Display first 50 paths
-
         simulation_df = pd.DataFrame(
             simulated_values[:, :50]
         )
 
-        st.line_chart(simulation_df)
+        st.line_chart(
+            simulation_df,
+            use_container_width=True
+        )
 
         st.caption(
             "Monte Carlo simulation based on historical "
@@ -645,11 +1063,14 @@ if analyze_button:
             "10,000 scenarios over 252 trading days."
         )
 
+
         # =================================================
         # DECISION SUPPORT
         # =================================================
 
-        st.subheader("Decision Support")
+        st.subheader(
+            "💡 Decision Support"
+        )
 
         if strategy == "Minimum Variance":
 
@@ -669,28 +1090,37 @@ if analyze_button:
                 "expected return against portfolio volatility."
             )
 
+
         # =================================================
         # RISK INTERPRETATION
         # =================================================
 
-        st.write("### Risk Interpretation")
+        st.subheader(
+            "🔎 Risk Interpretation"
+        )
 
         st.write(
             f"At a 95% confidence level, the portfolio's "
             f"1-day Value at Risk (VaR) is approximately "
-            f"${var_loss:,.2f}."
+            f"**${var_loss:,.2f}**."
         )
 
         st.write(
             f"If losses exceed the VaR threshold, the "
             f"average loss in these extreme cases (CVaR) "
-            f"is approximately ${cvar_loss:,.2f}."
+            f"is approximately **${cvar_loss:,.2f}**."
         )
 
         st.write(
             f"Based on the Monte Carlo simulation, the "
             f"estimated probability of ending the 252-day "
             f"period below the initial portfolio value is "
-            f"{probability_of_loss:.2%}."
+            f"**{probability_of_loss:.2%}**."
         )
 
+        st.divider()
+
+        st.caption(
+            "QuantRisk • Quantitative Portfolio Risk "
+            "& Decision Support System"
+        )
