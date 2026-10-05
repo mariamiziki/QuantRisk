@@ -49,6 +49,7 @@ st.markdown(
     color: #f8fafc;
 }
 
+
 .block-container {
     padding-top: 2rem;
     padding-bottom: 4rem;
@@ -102,6 +103,7 @@ h2, h3 {
         0 20px 50px rgba(0, 0, 0, 0.28);
 }
 
+
 .hero-card::after {
     content: "";
     position: absolute;
@@ -115,6 +117,7 @@ h2, h3 {
     background: rgba(56, 189, 248, 0.10);
     border-radius: 50%;
 }
+
 
 .hero-badge {
     display: inline-block;
@@ -134,6 +137,7 @@ h2, h3 {
     letter-spacing: 1.2px;
 }
 
+
 .hero-card h1 {
     margin: 5px 0 2px 0;
 
@@ -143,11 +147,13 @@ h2, h3 {
     color: #f8fafc !important;
 }
 
+
 .hero-card h3 {
     margin-top: 0;
     color: #38bdf8 !important;
     font-size: 22px;
 }
+
 
 .hero-card p {
     max-width: 780px;
@@ -179,9 +185,11 @@ h2, h3 {
         0 8px 25px rgba(0, 0, 0, 0.20);
 }
 
+
 [data-testid="stMetricLabel"] {
     color: #94a3b8;
 }
+
 
 [data-testid="stMetricValue"] {
     color: #f8fafc;
@@ -215,6 +223,7 @@ h2, h3 {
     box-shadow:
         0 5px 18px rgba(37, 99, 235, 0.25);
 }
+
 
 .stButton > button:hover {
     transform: translateY(-2px);
@@ -502,6 +511,139 @@ if analyze_button:
             }),
             use_container_width=True
         )
+
+
+        # =================================================
+        # CORRELATION & DIVERSIFICATION
+        # =================================================
+
+        st.subheader(
+            "🔗 Asset Correlation & Diversification"
+        )
+
+        correlation_matrix = returns.corr()
+
+        fig, ax = plt.subplots(
+            figsize=(8, 6)
+        )
+
+        fig.patch.set_facecolor("#0f172a")
+        ax.set_facecolor("#0f172a")
+
+        heatmap = ax.imshow(
+            correlation_matrix.values,
+            cmap="coolwarm",
+            vmin=-1,
+            vmax=1
+        )
+
+        ax.set_xticks(
+            range(len(correlation_matrix.columns))
+        )
+
+        ax.set_yticks(
+            range(len(correlation_matrix.index))
+        )
+
+        ax.set_xticklabels(
+            correlation_matrix.columns,
+            color="#e2e8f0"
+        )
+
+        ax.set_yticklabels(
+            correlation_matrix.index,
+            color="#e2e8f0"
+        )
+
+        for i in range(
+            len(correlation_matrix.index)
+        ):
+            for j in range(
+                len(correlation_matrix.columns)
+            ):
+
+                value = correlation_matrix.iloc[i, j]
+
+                ax.text(
+                    j,
+                    i,
+                    f"{value:.2f}",
+                    ha="center",
+                    va="center",
+                    color="white",
+                    fontweight="bold"
+                )
+
+        ax.set_title(
+            "Asset Return Correlation Matrix",
+            color="#f8fafc",
+            pad=15
+        )
+
+        colorbar = fig.colorbar(
+            heatmap,
+            ax=ax
+        )
+
+        colorbar.ax.tick_params(
+            colors="#cbd5e1"
+        )
+
+        colorbar.set_label(
+            "Correlation",
+            color="#cbd5e1"
+        )
+
+        st.pyplot(
+            fig,
+            use_container_width=True
+        )
+
+        plt.close(fig)
+
+        upper_triangle = correlation_matrix.where(
+            np.triu(
+                np.ones(
+                    correlation_matrix.shape
+                ),
+                k=1
+            ).astype(bool)
+        )
+
+        average_correlation = (
+            upper_triangle
+            .stack()
+            .mean()
+        )
+
+        st.metric(
+            "Average Pairwise Correlation",
+            f"{average_correlation:.2f}"
+        )
+
+        if average_correlation < 0.30:
+
+            st.success(
+                "The selected assets show relatively low "
+                "average correlation, which supports "
+                "portfolio diversification."
+            )
+
+        elif average_correlation < 0.60:
+
+            st.info(
+                "The selected assets show moderate average "
+                "correlation. The portfolio has some "
+                "diversification benefits."
+            )
+
+        else:
+
+            st.warning(
+                "The selected assets show relatively high "
+                "average correlation, which may limit "
+                "diversification benefits."
+            )
 
 
         # =================================================
