@@ -1107,6 +1107,286 @@ if analyze_button:
 
 
         # =================================================
+        # BENCHMARK COMPARISON — S&P 500
+        # =================================================
+
+        st.subheader(
+            "📊 Portfolio vs S&P 500 Benchmark"
+        )
+
+        with st.spinner(
+            "Downloading S&P 500 benchmark data..."
+        ):
+
+            benchmark_data = yf.download(
+                "^GSPC",
+                start=start_date,
+                auto_adjust=True,
+                progress=False
+            )
+
+        if benchmark_data.empty:
+
+            st.warning(
+                "S&P 500 benchmark data could not be "
+                "downloaded. The rest of the portfolio "
+                "analysis is still available."
+            )
+
+        else:
+
+            benchmark_prices = (
+                benchmark_data["Close"]
+                .squeeze()
+            )
+
+            benchmark_returns = (
+                benchmark_prices
+                .pct_change()
+                .dropna()
+            )
+
+            # Align portfolio and benchmark on the same dates
+
+            benchmark_comparison = pd.concat(
+                [
+                    portfolio_daily_returns.rename(
+                        "Recommended Portfolio"
+                    ),
+                    benchmark_returns.rename(
+                        "S&P 500"
+                    )
+                ],
+                axis=1,
+                join="inner"
+            ).dropna()
+
+            if benchmark_comparison.empty:
+
+                st.warning(
+                    "There are not enough common trading "
+                    "dates to compare the portfolio with "
+                    "the S&P 500."
+                )
+
+            else:
+
+                portfolio_benchmark_returns = (
+                    benchmark_comparison[
+                        "Recommended Portfolio"
+                    ]
+                )
+
+                sp500_returns = (
+                    benchmark_comparison[
+                        "S&P 500"
+                    ]
+                )
+
+
+                # -----------------------------------------
+                # CUMULATIVE PERFORMANCE
+                # -----------------------------------------
+
+                cumulative_performance = (
+                    1 + benchmark_comparison
+                ).cumprod()
+
+                cumulative_performance = (
+                    cumulative_performance * 100
+                )
+
+                st.line_chart(
+                    cumulative_performance,
+                    use_container_width=True
+                )
+
+                st.caption(
+                    "Growth of an initial value of 100. "
+                    "Both series are evaluated over the "
+                    "same historical trading dates."
+                )
+
+
+                # -----------------------------------------
+                # PERFORMANCE METRICS
+                # -----------------------------------------
+
+                portfolio_benchmark_annual_return = (
+                    portfolio_benchmark_returns.mean()
+                    * trading_days
+                )
+
+                benchmark_annual_return = (
+                    sp500_returns.mean()
+                    * trading_days
+                )
+
+                portfolio_benchmark_volatility = (
+                    portfolio_benchmark_returns.std()
+                    * (trading_days ** 0.5)
+                )
+
+                benchmark_volatility = (
+                    sp500_returns.std()
+                    * (trading_days ** 0.5)
+                )
+
+                portfolio_benchmark_sharpe = (
+                    portfolio_benchmark_annual_return
+                    - risk_free_decimal
+                ) / portfolio_benchmark_volatility
+
+                benchmark_sharpe = (
+                    benchmark_annual_return
+                    - risk_free_decimal
+                ) / benchmark_volatility
+
+                portfolio_total_return = (
+                    (
+                        1
+                        + portfolio_benchmark_returns
+                    ).prod()
+                    - 1
+                )
+
+                benchmark_total_return = (
+                    (
+                        1
+                        + sp500_returns
+                    ).prod()
+                    - 1
+                )
+
+
+                # -----------------------------------------
+                # COMPARISON TABLE
+                # -----------------------------------------
+
+                benchmark_table = pd.DataFrame({
+
+                    "Metric": [
+                        "Annualized Return",
+                        "Annualized Volatility",
+                        "Sharpe Ratio",
+                        "Total Cumulative Return"
+                    ],
+
+                    "Recommended Portfolio": [
+                        f"{portfolio_benchmark_annual_return:.2%}",
+                        f"{portfolio_benchmark_volatility:.2%}",
+                        f"{portfolio_benchmark_sharpe:.3f}",
+                        f"{portfolio_total_return:.2%}"
+                    ],
+
+                    "S&P 500": [
+                        f"{benchmark_annual_return:.2%}",
+                        f"{benchmark_volatility:.2%}",
+                        f"{benchmark_sharpe:.3f}",
+                        f"{benchmark_total_return:.2%}"
+                    ]
+
+                })
+
+                st.dataframe(
+                    benchmark_table,
+                    hide_index=True,
+                    use_container_width=True
+                )
+
+
+                # -----------------------------------------
+                # SUMMARY METRICS
+                # -----------------------------------------
+
+                col1, col2, col3 = st.columns(3)
+
+                col1.metric(
+                    "Portfolio Total Return",
+                    f"{portfolio_total_return:.2%}"
+                )
+
+                col2.metric(
+                    "S&P 500 Total Return",
+                    f"{benchmark_total_return:.2%}"
+                )
+
+                excess_return = (
+                    portfolio_total_return
+                    - benchmark_total_return
+                )
+
+                col3.metric(
+                    "Excess Return vs S&P 500",
+                    f"{excess_return:.2%}"
+                )
+
+
+                # -----------------------------------------
+                # AUTOMATIC INTERPRETATION
+                # -----------------------------------------
+
+                if (
+                    portfolio_total_return
+                    > benchmark_total_return
+                ):
+
+                    st.success(
+                        "During the selected historical "
+                        "period, the recommended portfolio "
+                        "outperformed the S&P 500 in total "
+                        "cumulative return."
+                    )
+
+                elif (
+                    portfolio_total_return
+                    < benchmark_total_return
+                ):
+
+                    st.info(
+                        "During the selected historical "
+                        "period, the recommended portfolio "
+                        "underperformed the S&P 500 in total "
+                        "cumulative return. This does not "
+                        "necessarily imply that the strategy "
+                        "performed poorly, because its risk "
+                        "and risk-adjusted performance should "
+                        "also be considered."
+                    )
+
+                else:
+
+                    st.info(
+                        "During the selected historical "
+                        "period, the recommended portfolio "
+                        "and the S&P 500 generated similar "
+                        "total cumulative returns."
+                    )
+
+                if (
+                    portfolio_benchmark_sharpe
+                    > benchmark_sharpe
+                ):
+
+                    st.success(
+                        "The recommended portfolio achieved "
+                        "a higher historical Sharpe Ratio "
+                        "than the S&P 500, indicating better "
+                        "risk-adjusted performance over the "
+                        "comparison period."
+                    )
+
+                else:
+
+                    st.info(
+                        "The S&P 500 achieved a higher "
+                        "historical Sharpe Ratio than the "
+                        "recommended portfolio over the "
+                        "comparison period."
+                    )
+
+
+        # =================================================
         # DRAWDOWN ANALYSIS
         # =================================================
 
